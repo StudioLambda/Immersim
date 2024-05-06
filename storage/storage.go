@@ -20,8 +20,12 @@ type Resource interface {
 	Stop()
 }
 
+type SupportedNumeric interface {
+	int32 | float32
+}
+
 type Supported interface {
-	int32 | float32 | bool
+	SupportedNumeric | bool
 }
 
 type Storage struct {
