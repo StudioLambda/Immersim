@@ -17,6 +17,14 @@ func NewApplication(storage *storage.Storage, events *event.Events) *Application
 	}
 }
 
+func (application *Application) Read(resource string) (any, error) {
+	return application.storage.Read(resource)
+}
+
+func (application *Application) Write(resource string, value any) error {
+	return application.storage.Write(resource, value)
+}
+
 func (application *Application) Start() {
 	application.storage.Start(application.events)
 }
