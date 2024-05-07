@@ -63,7 +63,7 @@ func (sine *SineWave) loop() {
 			sine.mutex.Lock()
 			sine.current = float32(sample)
 			sine.mutex.Unlock()
-			sine.events.Emit(sine.name)
+			sine.events.Emit(event.Changed(sine.name), nil)
 		case <-sine.quit:
 			return
 		}

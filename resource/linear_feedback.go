@@ -19,7 +19,7 @@ type LinearFeedback[T storage.SupportedNumeric] struct {
 	stepInterval time.Duration
 	setpoint     string
 	mutex        sync.RWMutex
-	listener     chan struct{}
+	listener     chan any
 	wg           sync.WaitGroup
 }
 
@@ -37,7 +37,7 @@ func NewLinearFeedback[T storage.SupportedNumeric](step T, stepInterval time.Dur
 		stepInterval: stepInterval,
 		setpoint:     setpoint,
 		mutex:        sync.RWMutex{},
-		listener:     make(chan struct{}),
+		listener:     nil,
 		wg:           sync.WaitGroup{},
 	}
 }
@@ -68,7 +68,7 @@ func (feedback *LinearFeedback[T]) loop() {
 					feedback.current = target
 				}
 
-				feedback.events.Emit(feedback.name)
+				feedback.events.Emit(event.Changed(feedback.name), nil)
 			} else if feedback.current > target {
 				feedback.current -= feedback.step
 
@@ -76,7 +76,7 @@ func (feedback *LinearFeedback[T]) loop() {
 					feedback.current = target
 				}
 
-				feedback.events.Emit(feedback.name)
+				feedback.events.Emit(event.Changed(feedback.name), nil)
 			}
 
 			feedback.mutex.Unlock()
@@ -115,16 +115,16 @@ func (feedback *LinearFeedback[T]) Start(name string, storage *storage.Storage, 
 	feedback.name = name
 	feedback.storage = storage
 	feedback.events = events
-	feedback.listener = make(chan struct{})
+	feedback.listener = make(chan any, 1)
 
 	feedback.wg.Add(1)
 	go feedback.loop()
 
-	feedback.events.Subscribe(feedback.setpoint, feedback.listener)
+	feedback.events.Subscribe(event.Changed(feedback.setpoint), feedback.listener)
 }
 
 func (feedback *LinearFeedback[T]) Stop() {
-	feedback.events.Unsubscribe(feedback.setpoint, feedback.listener)
+	feedback.events.Unsubscribe(event.Changed(feedback.setpoint), feedback.listener)
 	close(feedback.listener)
 
 	feedback.wg.Done()

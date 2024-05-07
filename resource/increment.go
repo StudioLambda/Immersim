@@ -13,6 +13,7 @@ type Increment[T storage.SupportedNumeric] struct {
 	storage  *storage.Storage
 	events   *event.Events
 	current  T
+	initial  T
 	mutex    sync.RWMutex
 	quit     chan struct{}
 	wg       sync.WaitGroup
@@ -26,6 +27,7 @@ func NewIncrement[T storage.SupportedNumeric](initial T, step T, interval time.D
 		storage:  nil,
 		events:   nil,
 		current:  initial,
+		initial:  initial,
 		mutex:    sync.RWMutex{},
 		quit:     nil,
 		wg:       sync.WaitGroup{},
@@ -40,14 +42,24 @@ func (increment *Increment[T]) loop() {
 	ticker := time.NewTicker(increment.interval)
 	defer ticker.Stop()
 
+	reset := make(chan any, 1)
+	increment.events.Subscribe(event.Action(increment.name, "reset"), reset)
+	defer increment.events.Unsubscribe(event.Action(increment.name, "reset"), reset)
+
 	for {
 		select {
+		case <-reset:
+			increment.mutex.Lock()
+			increment.current = increment.initial
+			increment.mutex.Unlock()
+
+			increment.events.Emit(event.Changed(increment.name), nil)
 		case <-ticker.C:
 			increment.mutex.Lock()
 			increment.current += increment.step
 			increment.mutex.Unlock()
 
-			increment.events.Emit(increment.name)
+			increment.events.Emit(event.Changed(increment.name), nil)
 		case <-increment.quit:
 			return
 		}

@@ -15,7 +15,7 @@ type Computed[T storage.Supported] struct {
 	callback     func(name string, storage *storage.Storage) T
 	dependencies []string
 	mutex        sync.RWMutex
-	listener     chan struct{}
+	listener     chan any
 	waitGroup    sync.WaitGroup
 }
 
@@ -37,20 +37,20 @@ func (computed *Computed[T]) Start(name string, storage *storage.Storage, events
 	computed.name = name
 	computed.storage = storage
 	computed.events = events
-	computed.listener = make(chan struct{}, len(computed.dependencies))
+	computed.listener = make(chan any, len(computed.dependencies))
 	computed.current = computed.callback(computed.name, computed.storage)
 
 	computed.waitGroup.Add(1)
 	go computed.loop()
 
 	for _, dependency := range computed.dependencies {
-		computed.events.Subscribe(dependency, computed.listener)
+		computed.events.Subscribe(event.Changed(dependency), computed.listener)
 	}
 }
 
 func (computed *Computed[T]) Stop() {
 	for _, dependency := range computed.dependencies {
-		computed.events.Unsubscribe(dependency, computed.listener)
+		computed.events.Unsubscribe(event.Changed(dependency), computed.listener)
 	}
 
 	close(computed.listener)
@@ -77,6 +77,6 @@ func (computed *Computed[T]) loop() {
 		computed.mutex.Lock()
 		computed.current = computed.callback(computed.name, computed.storage)
 		computed.mutex.Unlock()
-		computed.events.Emit(computed.name)
+		computed.events.Emit(event.Changed(computed.name), nil)
 	}
 }

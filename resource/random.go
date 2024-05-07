@@ -61,7 +61,7 @@ func (random *Random[T]) loop() {
 			random.current = value.(T)
 			random.mutex.Unlock()
 
-			random.events.Emit(random.name)
+			random.events.Emit(event.Changed(random.name), nil)
 		case <-random.quit:
 			return
 		}

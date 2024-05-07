@@ -25,6 +25,10 @@ func (application *Application) Write(resource string, value any) error {
 	return application.storage.Write(resource, value)
 }
 
+func (application *Application) Action(resource string, action string, payload any) {
+	application.events.Emit(event.Action(resource, action), payload)
+}
+
 func (application *Application) Start() {
 	application.storage.Start(application.events)
 }

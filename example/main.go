@@ -18,7 +18,7 @@ func isAbove(name string, storage *storage.Storage) bool {
 }
 
 func main() {
-	events := event.NewEvents()
+	events := event.NewEvents(100 * time.Millisecond)
 	storage := storage.NewStorage(map[string]storage.Resource{
 		"tmp": resource.NewSineWave(
 			0.15,                // Frequency
@@ -26,7 +26,7 @@ func main() {
 			50,                  // Offset
 			50*time.Millisecond, // Interval update
 		),
-		"setpoint": resource.NewStaticReadWriter[int32](25),
+		"setpoint": resource.NewConstant[int32](25),
 		"above":    resource.NewComputed(isAbove, []string{"tmp", "setpoint"}),
 		"rand":     resource.NewRandom[int32](0, 20, 10*time.Second),
 		"feedback": resource.NewLinearFeedback[int32](1, 500*time.Millisecond, "rand"),

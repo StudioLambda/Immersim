@@ -3,41 +3,48 @@ package event
 import (
 	"slices"
 	"sync"
+	"time"
 )
 
 type Events struct {
 	mutex     sync.RWMutex
-	listeners map[string][]chan<- struct{}
+	timeout   time.Duration
+	listeners map[Event][]chan<- any
 }
 
-func NewEvents() *Events {
+func NewEvents(timeout time.Duration) *Events {
 	return &Events{
 		mutex:     sync.RWMutex{},
-		listeners: make(map[string][]chan<- struct{}),
+		listeners: make(map[Event][]chan<- any),
 	}
 }
 
-func (events *Events) Subscribe(event string, listener chan<- struct{}) {
+func (events *Events) Subscribe(event Event, listener chan<- any) {
 	events.mutex.Lock()
 	defer events.mutex.Unlock()
 
 	events.listeners[event] = append(events.listeners[event], listener)
 }
 
-func (events *Events) Unsubscribe(event string, listener chan<- struct{}) {
+func (events *Events) Unsubscribe(event Event, listener chan<- any) {
 	events.mutex.Lock()
 	defer events.mutex.Unlock()
 
-	events.listeners[event] = slices.DeleteFunc(events.listeners[event], func(lis chan<- struct{}) bool {
+	events.listeners[event] = slices.DeleteFunc(events.listeners[event], func(lis chan<- any) bool {
 		return listener == lis
 	})
 }
 
-func (events *Events) Emit(event string) {
+func (events *Events) Emit(event Event, payload any) {
 	events.mutex.RLock()
 	defer events.mutex.RUnlock()
 
 	for _, listener := range events.listeners[event] {
-		listener <- struct{}{}
+		select {
+		case listener <- payload:
+			continue
+		case <-time.After(events.timeout):
+			continue
+		}
 	}
 }
