@@ -63,14 +63,20 @@ func (feedback *LinearFeedback[T]) loop() {
 
 			if feedback.current < target {
 				feedback.current += feedback.step
+
 				if feedback.current > target {
 					feedback.current = target
 				}
+
+				feedback.events.Emit(feedback.name)
 			} else if feedback.current > target {
 				feedback.current -= feedback.step
+
 				if feedback.current < target {
 					feedback.current = target
 				}
+
+				feedback.events.Emit(feedback.name)
 			}
 
 			feedback.mutex.Unlock()

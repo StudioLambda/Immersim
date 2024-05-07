@@ -30,6 +30,7 @@ func main() {
 		"above":    resource.NewComputed(isAbove, []string{"tmp", "setpoint"}),
 		"rand":     resource.NewRandom[int32](0, 20, 10*time.Second),
 		"feedback": resource.NewLinearFeedback[int32](1, 500*time.Millisecond, "rand"),
+		"inc":      resource.NewIncrement[int32](0, 1, 500*time.Millisecond),
 	})
 
 	app := immersim.NewApplication(storage, events)
@@ -43,7 +44,8 @@ func main() {
 		above, _ := storage.Read("above")
 		random, _ := storage.Read("rand")
 		feedback, _ := storage.Read("feedback")
-		fmt.Printf("tmp: %f\tsetpoint: %d\tabove: %t\t rand: %d\t feedback: %d\n", tmp, setpoint, above, random, feedback)
+		inc, _ := storage.Read("inc")
+		fmt.Printf("tmp: %f\tsetpoint: %d\tabove: %t\t rand: %d\t feedback: %d\tinc: %d\n", tmp, setpoint, above, random, feedback, inc)
 		time.Sleep(100 * time.Millisecond)
 	}
 }
