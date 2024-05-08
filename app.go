@@ -29,6 +29,22 @@ func (application *Application) Action(resource string, action string, payload a
 	application.events.Emit(event.Action(resource, action), payload)
 }
 
+func (application *Application) SubscribeChanges(resource string, listener chan any) {
+	application.events.Subscribe(event.Changed(resource), listener)
+}
+
+func (application *Application) UnsubscribeChanges(resource string, listener chan<- any) {
+	application.events.Unsubscribe(event.Changed(resource), listener)
+}
+
+func (application *Application) SubscribeAction(resource string, action string, listener chan any) {
+	application.events.Subscribe(event.Action(resource, action), listener)
+}
+
+func (application *Application) UnsubscribeAction(resource string, action string, listener chan<- any) {
+	application.events.Unsubscribe(event.Action(resource, action), listener)
+}
+
 func (application *Application) Start() {
 	application.storage.Start(application.events)
 }
