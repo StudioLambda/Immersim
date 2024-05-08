@@ -127,7 +127,7 @@ func (feedback *LinearFeedback[T]) Stop() {
 	feedback.events.Unsubscribe(event.Changed(feedback.setpoint), feedback.listener)
 	close(feedback.listener)
 
-	feedback.wg.Done()
+	feedback.wg.Wait()
 
 	feedback.name = ""
 	feedback.storage = nil
