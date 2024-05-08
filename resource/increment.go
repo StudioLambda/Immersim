@@ -56,11 +56,13 @@ func (increment *Increment[T]) loop() {
 			ticker.Reset(increment.interval)
 		case <-increment.reset:
 			increment.mutex.Lock()
+
 			increment.current = increment.initial
 			increment.events.Emit(event.Changed(increment.name), event.ChangedPayload{
 				Resource: increment.name,
 				Value:    increment.current,
 			})
+
 			increment.mutex.Unlock()
 		case <-ticker.C:
 			increment.mutex.Lock()

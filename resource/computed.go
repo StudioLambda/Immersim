@@ -75,11 +75,17 @@ func (computed *Computed[T]) loop() {
 
 	for range computed.listener {
 		computed.mutex.Lock()
-		computed.current = computed.callback(computed.name, computed.storage)
-		computed.events.Emit(event.Changed(computed.name), event.ChangedPayload{
-			Resource: computed.name,
-			Value:    computed.current,
-		})
+		new := computed.callback(computed.name, computed.storage)
+		hasChanged := computed.current != new
+		computed.current = new
+
+		if hasChanged {
+			computed.events.Emit(event.Changed(computed.name), event.ChangedPayload{
+				Resource: computed.name,
+				Value:    computed.current,
+			})
+		}
+
 		computed.mutex.Unlock()
 	}
 }
