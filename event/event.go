@@ -4,6 +4,11 @@ import "fmt"
 
 type Event string
 
+type ChangedPayload struct {
+	Resource string
+	Value    any
+}
+
 func Changed(resource string) Event {
 	return Event(resource)
 }

@@ -36,7 +36,10 @@ func (static *Static[T]) Write(value any) error {
 
 	if val, ok := value.(T); ok {
 		static.current = val
-		static.events.Emit(event.Changed(static.name), nil)
+		static.events.Emit(event.Changed(static.name), event.ChangedPayload{
+			Resource: static.name,
+			Value:    static.current,
+		})
 
 		return nil
 	}

@@ -68,7 +68,10 @@ func (feedback *LinearFeedback[T]) loop() {
 					feedback.current = target
 				}
 
-				feedback.events.Emit(event.Changed(feedback.name), nil)
+				feedback.events.Emit(event.Changed(feedback.name), event.ChangedPayload{
+					Resource: feedback.name,
+					Value:    feedback.current,
+				})
 			} else if feedback.current > target {
 				feedback.current -= feedback.step
 
@@ -76,7 +79,10 @@ func (feedback *LinearFeedback[T]) loop() {
 					feedback.current = target
 				}
 
-				feedback.events.Emit(event.Changed(feedback.name), nil)
+				feedback.events.Emit(event.Changed(feedback.name), event.ChangedPayload{
+					Resource: feedback.name,
+					Value:    feedback.current,
+				})
 			}
 
 			feedback.mutex.Unlock()

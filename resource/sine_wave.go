@@ -62,8 +62,11 @@ func (sine *SineWave) loop() {
 			sample := sine.amplitude*math.Sin(2*math.Pi*sine.frequency*t) + sine.offset
 			sine.mutex.Lock()
 			sine.current = float32(sample)
+			sine.events.Emit(event.Changed(sine.name), event.ChangedPayload{
+				Resource: sine.name,
+				Value:    sine.current,
+			})
 			sine.mutex.Unlock()
-			sine.events.Emit(event.Changed(sine.name), nil)
 		case <-sine.quit:
 			return
 		}

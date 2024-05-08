@@ -59,9 +59,12 @@ func (random *Random[T]) loop() {
 
 			random.mutex.Lock()
 			random.current = value.(T)
+			random.events.Emit(event.Changed(random.name), event.ChangedPayload{
+				Resource: random.name,
+				Value:    random.current,
+			})
 			random.mutex.Unlock()
 
-			random.events.Emit(event.Changed(random.name), nil)
 		case <-random.quit:
 			return
 		}
