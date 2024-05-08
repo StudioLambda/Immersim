@@ -30,13 +30,22 @@ func main() {
 		"above":    resource.NewComputed(isAbove, []string{"tmp", "setpoint"}),
 		"rand":     resource.NewRandom[int32](0, 20, 10*time.Second),
 		"feedback": resource.NewLinearFeedback[int32](1, 500*time.Millisecond, "rand"),
-		"inc":      resource.NewIncrement[int32](0, 1, 500*time.Millisecond),
+		"inc":      resource.NewIncrement[int32](0, 1, 100*time.Millisecond),
 	})
 
 	app := immersim.NewApplication(storage, events)
 
 	app.Start()
 	defer app.Stop()
+
+	go func() {
+		time.Sleep(5 * time.Second)
+		app.Action("inc", "pause", nil)
+		time.Sleep(5 * time.Second)
+		app.Action("inc", "resume", nil)
+		time.Sleep(5 * time.Second)
+		app.Action("inc", "reset", nil)
+	}()
 
 	for {
 		tmp, _ := storage.Read("tmp")
